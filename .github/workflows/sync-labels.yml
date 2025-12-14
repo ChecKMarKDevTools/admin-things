@@ -10,9 +10,7 @@ permissions:
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/org-labels.yml'
-      - '.github/workflows/sync-labels.yml'
+    branches: [main]
 
 jobs:
   labeler:
