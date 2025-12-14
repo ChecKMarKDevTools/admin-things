@@ -25,12 +25,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Get public repositories for org
+        id: repos
+        env:
+          ORG: ChecKMarKDevTools
+          TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+        run: |
+          page=1
+          repos=""
+          while :; do
+            response=$(curl -s -H "Authorization: Bearer $TOKEN" "https://api.github.com/orgs/$ORG/repos?per_page=100&type=public&page=$page")
+            names=$(echo "$response" | jq -r '.[].full_name')
+            if [ -z "$names" ]; then break; fi
+            if [ -z "$repos" ]; then repos="$names"; else repos="$repos\n$names"; fi
+            page=$((page+1))
+          done
+          # Expose repositories as workflow output (newline-separated)
+          printf '%s\n' "$repos" > repos.txt
+          printf 'repos<<EOF\n%s\nEOF\n' "$repos" >> $GITHUB_OUTPUT
+
       - uses: micnncim/action-label-syncer@v1
         with:
           manifest: .github/org-labels.yml
-          repository: |
-            ChecKMarKDevTools/rai-lint
-            ChecKMarKDevTools/checkmark-upkeep-docs-action
-            ChecKMarKDevTools/checkmark-upkeep-docs-agentic-test
-            ChecKMarKDevTools/markdown-publisher-toolkit
+          repository: ${{ steps.repos.outputs.repos }}
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
