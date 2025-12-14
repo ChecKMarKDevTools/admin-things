@@ -1,0 +1,35 @@
+name: Sync GitHub Labels 🔄
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - '.github/org-labels.yml'
+      - '.github/workflows/sync-labels.yml'
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: micnncim/action-label-syncer@v1
+        with:
+          manifest: .github/org-labels.yml
+          repository: |
+            ChecKMarKDevTools/rai-lint
+            ChecKMarKDevTools/checkmark-upkeep-docs-action
+            ChecKMarKDevTools/checkmark-upkeep-docs-agentic-test
+            ChecKMarKDevTools/markdown-publisher-toolkit
+          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
