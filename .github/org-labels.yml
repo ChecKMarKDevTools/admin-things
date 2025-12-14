@@ -1,39 +1,39 @@
-- name: ":robot: AutoSummon"
-  color: "8A2BE2"
-  description: "Bot-summoned chores: releases, bumps, and other scripted nonsense."
-
 - name: ":question: Clue Me In"
-  color: "007BFF"
+  color: "1D4ED8"
   description: "Explain this to me like I haven't been staring at it for 3 hours."
 
 - name: ":repeat: Déjà Vu"
-  color: "4C6EF5"
+  color: "4338CA"
   description: "We've seen this before. Link it, close it, keep moving."
 
 - name: ":gem: Cracked Gem"
-  color: "B56576"
+  color: "A13A5B"
   description: "Something's broken again and it's probably important."
 
 - name: ":file_folder: Case File"
-  color: "3FA7D6"
+  color: "0E7490"
   description: "Forensics, repro steps, logs, and other missing clues."
 
 - name: ":sparkles: Divine Intervention"
-  color: "C678DD"
+  color: "7C3AED"
   description: "Feature requests, wish lists, and unlikely code miracles."
 
-- name: ":large_green_circle: Red Light Green Light"
-  color: "2ECC71"
+- name: ":vertical_traffic_light: Red Light Green Light"
+  color: "15803D"
   description: "Low risk, n00b-safe, and probably fine to merge."
 
-- name: ":no_entry_sign: NopeNotHappening"
-  color: "6C757D"
+- name: ":no_entry_sign: Nope Not Happening"
+  color: "374151"
   description: "Won't fix. Not now, not later, not ever."
 
 - name: ":bug: Invalidated"
-  color: "FFC107"
+  color: "D97706"
   description: "Not a bug. Misread spec, haunted cache, or user gremlin."
 
 - name: ":crystal_ball: Spirit Guide"
-  color: "6F42C1"
+  color: "5B21B6"
   description: "Help from maintainers, mentors, or whoever knows this mess best."
+
+- name: ":robot: AutoSummon"
+  color: "6D28D9"
+  description: "Bot-summoned chores: releases, bumps, and other scripted nonsense."
