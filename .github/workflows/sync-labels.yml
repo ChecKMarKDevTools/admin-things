@@ -26,74 +26,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Sync labels to all org repos
+      - name: Sync and Cleanup Labels
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: |
-          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner,isArchived --jq '.[] | select(.isArchived == false) | .nameWithOwner')
-
-          for repo in $repos; do
-            echo "Syncing labels to $repo"
-            jq -c '.[]' .github/org-labels.json | while read -r label; do
-              name=$(echo "$label" | jq -r .name)
-              color=$(echo "$label" | jq -r .color)
-              desc=$(echo "$label" | jq -r .description)
-              if gh label list --repo "$repo" --json name | jq -e ".[] | select(.name == \"$name\")" > /dev/null; then
-                gh label edit "$name" --color "$color" --description "$desc" --repo "$repo"
-              else
-                gh label create "$name" --color "$color" --description "$desc" --repo "$repo"
-              fi
-            done
-          done
-      - name: Clean up extra labels
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
-        run: |
-          labels_in_json=$(jq -r '.[].name' .github/org-labels.json)
-          temp_file=$(mktemp)
-          found_any=false
-          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner,isArchived --jq '.[] | select(.isArchived == false) | .nameWithOwner')
-          for repo in $repos; do
-            gh label list --repo "$repo" --json name | jq -r '.[].name' | while read -r existing_label; do
-              if ! echo "$labels_in_json" | grep -q "^$existing_label$"; then
-                issues=$(gh issue list --label "$existing_label" --repo "$repo" --json url,number,title)
-                prs=$(gh pr list --label "$existing_label" --repo "$repo" --json url,number,title)
-                discussions=$(gh discussion list --label "$existing_label" --repo "$repo" --json url,number,title)
-                if [ "$(echo "$issues" | jq '. | length')" -eq 0 ] && [ "$(echo "$prs" | jq '. | length')" -eq 0 ] && [ "$(echo "$discussions" | jq '. | length')" -eq 0 ]; then
-                  echo "Deleting unused label '$existing_label' from $repo"
-                  gh label delete "$existing_label" --repo "$repo" --yes
-                else
-                  found_any=true
-                  # Collect data for summary
-                  echo "$issues" | jq -r '.[] | "'"$existing_label|$repo|Issue|\(.number)|\(.url)|\(.title)"' >> "$temp_file"
-                  echo "$prs" | jq -r '.[] | "'"$existing_label|$repo|PR|\(.number)|\(.url)|\(.title)"' >> "$temp_file"
-                  echo "$discussions" | jq -r '.[] | "'"$existing_label|$repo|Discussion|\(.number)|\(.url)|\(.title)"' >> "$temp_file"
-                fi
-              fi
-            done
-          done
-          if [ "$found_any" = true ]; then
-            current_repo=""
-            current_label=""
-            sort "$temp_file" | while IFS='|' read -r label repo type number url title; do
-              if [ "$current_repo" != "$repo" ]; then
-                if [ -n "$current_repo" ]; then
-                  echo "::endgroup::"
-                fi
-                echo "::group::Extra labels in $repo"
-                current_repo="$repo"
-                current_label=""
-              fi
-              if [ "$current_label" != "$label" ]; then
-                echo "- Label '$label' is in use:"
-                current_label="$label"
-              fi
-              echo "  - $type [#$number]($url): $title"
-            done
-            if [ -n "$current_repo" ]; then
-              echo "::endgroup::"
-            fi
-          else
-            echo "No extra labels in use."
-          fi
-          rm "$temp_file"
+          python3 .github/scripts/sync_labels.py
