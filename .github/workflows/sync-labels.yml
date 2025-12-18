@@ -11,6 +11,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - .github/org-labels.json
+      - .github/workflows/sync-labels.yml
 
 jobs:
   labeler:
