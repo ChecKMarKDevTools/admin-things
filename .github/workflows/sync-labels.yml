@@ -30,7 +30,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
         run: |
-          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner --jq '.[].nameWithOwner')
+          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner,isArchived --jq '.[] | select(.isArchived == false) | .nameWithOwner')
 
           for repo in $repos; do
             echo "Syncing labels to $repo"
@@ -52,7 +52,7 @@ jobs:
           labels_in_json=$(jq -r '.[].name' .github/org-labels.json)
           temp_file=$(mktemp)
           found_any=false
-          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner --jq '.[].nameWithOwner')
+          repos=$(gh repo list ChecKMarKDevTools --limit 1000 --json nameWithOwner,isArchived --jq '.[] | select(.isArchived == false) | .nameWithOwner')
           for repo in $repos; do
             gh label list --repo "$repo" --json name | jq -r '.[].name' | while read -r existing_label; do
               if ! echo "$labels_in_json" | grep -q "^$existing_label$"; then
