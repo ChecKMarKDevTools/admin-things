@@ -1,30 +1,150 @@
 import json
-import subprocess
-import sys
 import os
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 
-def run_command(args):
-    result = subprocess.run(args, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"Error running {' '.join(args)}: {result.stderr}", file=sys.stderr)
+
+API = "https://api.github.com"
+GRAPHQL = "https://api.github.com/graphql"
+
+
+def token() -> str:
+    t = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if not t:
+        print("Missing GH_TOKEN (or GITHUB_TOKEN).", file=sys.stderr)
+        sys.exit(2)
+    return t
+
+
+def api(method: str, url: str, t: str, *, params=None, body=None):
+    if params:
+        url = f"{url}?{urllib.parse.urlencode(params)}"
+    data = None if body is None else json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {t}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "admin-things",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode("utf-8")
+            return None if not raw else json.loads(raw)
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode("utf-8", errors="replace")
+        print(f"GitHub API error {e.code} {method} {url}: {raw[:2000]}", file=sys.stderr)
         return None
-    return result.stdout
+    except Exception as e:
+        print(f"GitHub API failed {method} {url}: {e}", file=sys.stderr)
+        return None
 
-def get_repos(org):
-    output = run_command(["gh", "repo", "list", org, "--limit", "1000", "--json", "nameWithOwner,isArchived"])
-    if not output:
-        return []
-    repos = json.loads(output)
-    return [r["nameWithOwner"] for r in repos if not r["isArchived"]]
 
-def get_repo_labels(repo):
-    output = run_command(["gh", "label", "list", "--repo", repo, "--json", "name,description,color"])
-    if not output:
+def paged(path: str, t: str, *, params=None):
+    out: list[dict] = []
+    page = 1
+    while True:
+        p = dict(params or {})
+        p["per_page"] = 100
+        p["page"] = page
+        batch = api("GET", f"{API}{path}", t, params=p)
+        if batch is None:
+            return None
+        if not batch:
+            return out
+        if not isinstance(batch, list):
+            print(f"Expected list from {path}", file=sys.stderr)
+            return None
+        out.extend(batch)
+        page += 1
+
+
+def has_issues_or_prs(repo: str, label: str, t: str) -> bool | None:
+    data = api(
+        "GET",
+        f"{API}/repos/{repo}/issues",
+        t,
+        params={"state": "all", "labels": label, "per_page": 1},
+    )
+    if data is None:
+        return None
+    if not isinstance(data, list):
+        return None
+    return len(data) > 0
+
+
+def has_discussions(repo: str, label: str, t: str) -> bool | None:
+    q = f'repo:{repo} label:"{label}"'
+    query = """query($q: String!) {
+  search(query: $q, type: DISCUSSION, first: 1) { discussionCount }
+}
+"""
+    data = api(
+        "POST",
+        GRAPHQL,
+        t,
+        body={"query": query, "variables": {"q": q}},
+    )
+    if data is None or data.get("errors"):
+        return None
+    try:
+        return int(data["data"]["search"]["discussionCount"]) > 0
+    except Exception:
+        return None
+
+
+def list_repos(org: str, t: str):
+    repos = paged(f"/orgs/{org}/repos", t, params={"type": "all"})
+    if repos is None:
         return []
-    return json.loads(output)
+    return [r["full_name"] for r in repos if not r.get("archived")]
+
+
+def list_labels(repo: str, t: str):
+    labels = paged(f"/repos/{repo}/labels", t)
+    if labels is None:
+        return []
+    out = []
+    for l in labels:
+        name = l.get("name")
+        color = l.get("color")
+        if not name or not color:
+            continue
+        out.append({"name": name, "color": color, "description": l.get("description") or ""})
+    return out
+
+
+def label_create(repo: str, name: str, color: str, description: str, t: str):
+    api(
+        "POST",
+        f"{API}/repos/{repo}/labels",
+        t,
+        body={"name": name, "color": color, "description": description},
+    )
+
+
+def label_update(repo: str, name: str, color: str, description: str, t: str):
+    enc = urllib.parse.quote(name, safe="")
+    api(
+        "PATCH",
+        f"{API}/repos/{repo}/labels/{enc}",
+        t,
+        body={"color": color, "description": description},
+    )
+
+
+def label_delete(repo: str, name: str, t: str):
+    enc = urllib.parse.quote(name, safe="")
+    api("DELETE", f"{API}/repos/{repo}/labels/{enc}", t)
 
 def sync_labels(repo, target_labels):
-    existing_labels = {l["name"]: l for l in get_repo_labels(repo)}
+    t = token()
+    existing_labels = {l["name"]: l for l in list_labels(repo, t)}
 
     for target in target_labels:
         name = target["name"]
@@ -35,73 +155,54 @@ def sync_labels(repo, target_labels):
             existing = existing_labels[name]
             if existing["color"].lower() != color.lower() or existing["description"] != description:
                 print(f"Updating label '{name}' in {repo}")
-                run_command(["gh", "label", "edit", name, "--repo", repo, "--color", color, "--description", description])
+                label_update(repo, name, color, description, t)
         else:
             print(f"Creating label '{name}' in {repo}")
-            run_command(["gh", "label", "create", name, "--repo", repo, "--color", color, "--description", description])
+            label_create(repo, name, color, description, t)
 
 def cleanup_labels(repo, target_label_names):
-    existing_labels = get_repo_labels(repo)
+    t = token()
+    existing_labels = list_labels(repo, t)
     extra_labels = [l["name"] for l in existing_labels if l["name"] not in target_label_names]
 
-    usage_report = []
-
     for label in extra_labels:
-        # Check issues and PRs (gh issue list covers both if not specified, but let's be explicit)
-        issues = json.loads(run_command(["gh", "issue", "list", "--repo", repo, "--label", label, "--json", "number,url,title"]) or "[]")
-        prs = json.loads(run_command(["gh", "pr", "list", "--repo", repo, "--label", label, "--json", "number,url,title"]) or "[]")
+        used_in_issues_or_prs = has_issues_or_prs(repo, label, t)
+        used_in_discussions = has_discussions(repo, label, t)
 
-        # Discussions might fail if not enabled
-        discussions_output = run_command(["gh", "discussion", "list", "--repo", repo, "--label", label, "--json", "number,url,title"])
-        discussions = json.loads(discussions_output) if discussions_output else []
+        # Fail safe: if any usage-check failed, do not delete.
+        checks_failed = used_in_issues_or_prs is None or used_in_discussions is None
+        if checks_failed:
+            print(
+                f"Skipping deletion check for label '{label}' in {repo}: "
+                "one or more usage checks failed",
+                file=sys.stderr,
+            )
+            continue
 
-        if not issues and not prs and not discussions:
+        if not used_in_issues_or_prs and not used_in_discussions:
             print(f"Deleting unused label '{label}' from {repo}")
-            run_command(["gh", "label", "delete", label, "--repo", repo, "--yes"])
+            label_delete(repo, label, t)
         else:
-            for item in issues:
-                usage_report.append({"label": label, "repo": repo, "type": "Issue", "number": item["number"], "url": item["url"], "title": item["title"]})
-            for item in prs:
-                usage_report.append({"label": label, "repo": repo, "type": "PR", "number": item["number"], "url": item["url"], "title": item["title"]})
-            for item in discussions:
-                usage_report.append({"label": label, "repo": repo, "type": "Discussion", "number": item["number"], "url": item["url"], "title": item["title"]})
-
-    return usage_report
+            print(f"Keeping label '{label}' in {repo}: in use")
 
 def main():
     org = "ChecKMarKDevTools"
     labels_file = ".github/org-labels.json"
 
+    t = token()
+
     with open(labels_file, "r") as f:
         target_labels = json.load(f)
 
     target_label_names = [l["name"] for l in target_labels]
-    repos = get_repos(org)
-
-    all_usage = []
+    repos = list_repos(org, t)
 
     for repo in repos:
         print(f"Processing {repo}...")
         sync_labels(repo, target_labels)
-        usage = cleanup_labels(repo, target_label_names)
-        all_usage.extend(usage)
+        cleanup_labels(repo, target_label_names)
 
-    if all_usage:
-        # Group by repo for the summary
-        all_usage.sort(key=lambda x: (x["repo"], x["label"]))
-        current_repo = ""
-        for item in all_usage:
-            if item["repo"] != current_repo:
-                if current_repo:
-                    print("::endgroup::")
-                print(f"::group::Extra labels in {item['repo']}")
-                current_repo = item["repo"]
-            print(f"- Label '{item['label']}' is in use:")
-            print(f"  - {item['type']} [#{item['number']}]({item['url']}): {item['title']}")
-        if current_repo:
-            print("::endgroup::")
-    else:
-        print("No extra labels in use.")
+    print("Done.")
 
 if __name__ == "__main__":
     main()

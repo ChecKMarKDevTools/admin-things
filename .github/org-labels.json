@@ -1,51 +1,51 @@
 [
   {
-    "name": "❓ Clue Me In",
+    "name": ":question: Clue Me In",
     "color": "1D4ED8",
     "description": "Explain this to me like I haven't been staring at it for 3 hours."
   },
   {
-    "name": "🌪️ Déjà Vu",
+    "name": ":tornado: Déjà Vu",
     "color": "4C6EF5",
     "description": "We've seen this before. Link it, close it, keep moving."
   },
   {
-    "name": "💎 Cracked Gem",
+    "name": ":gem: Cracked Gem",
     "color": "A13A5B",
     "description": "Something's broken again and it's probably important."
   },
   {
-    "name": "📂 Case File",
+    "name": ":open_file_folder: Case File",
     "color": "0E7490",
     "description": "Forensics, repro steps, logs, and other missing clues."
   },
   {
-    "name": "✨ Divine Intervention",
+    "name": ":sparkles: Divine Intervention",
     "color": "7C3AED",
     "description": "Feature requests, wish lists, and unlikely code miracles."
   },
   {
-    "name": "🚦 Red Light Green Light",
+    "name": ":vertical_traffic_light: Red Light Green Light",
     "color": "34A853",
     "description": "Low risk, n00b-safe, and probably fine to merge."
   },
   {
-    "name": "🚫 Nope Not Happening",
+    "name": ":no_entry_sign: Nope Not Happening",
     "color": "374151",
     "description": "Won't fix. Not now, not later, not ever."
   },
   {
-    "name": "🤷‍♀️ Invalidated",
+    "name": ":woman_shrugging: Invalidated",
     "color": "EDC531",
     "description": "Not a bug. Misread spec, haunted cache, or user gremlin."
   },
   {
-    "name": "🔮 Spirit Guide",
+    "name": ":crystal_ball: Spirit Guide",
     "color": "5B21B6",
     "description": "Help from maintainers, mentors, or whoever knows this mess best."
   },
   {
-    "name": "🤖 AutoSummon",
+    "name": ":robot: AutoSummon",
     "color": "6D28D9",
     "description": "Bot-summoned chores: releases, bumps, and other scripted nonsense."
   }
