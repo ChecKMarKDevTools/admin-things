@@ -1,52 +1,57 @@
 [
   {
-    "name": ":question: Clue Me In",
-    "color": "1D4ED8",
-    "description": "Explain this to me like I haven't been staring at it for 3 hours."
+    "name": ":zap: Short Circuit",
+    "color": "EAB308",
+    "description": "Worked yesterday. Doesn't now. Nobody touched it."
   },
   {
-    "name": ":tornado: Déjà Vu",
-    "color": "4C6EF5",
-    "description": "We've seen this before. Link it, close it, keep moving."
+    "name": ":fire: Everything Is Fine",
+    "color": "DC2626",
+    "description": "It is not fine. Drop what you're holding."
   },
   {
-    "name": ":gem: Cracked Gem",
-    "color": "A13A5B",
-    "description": "Something's broken again and it's probably important."
+    "name": ":snail: Slower, With Nouns",
+    "color": "0891B2",
+    "description": "Say it again, assume no context, name the thing."
   },
   {
-    "name": ":open_file_folder: Case File",
-    "color": "0E7490",
-    "description": "Forensics, repro steps, logs, and other missing clues."
+    "name": ":brain: Object Permanence",
+    "color": "2563EB",
+    "description": "If it isn't written down, it doesn't exist. Docs, logs, repro steps."
   },
   {
-    "name": ":sparkles: Divine Intervention",
-    "color": "7C3AED",
-    "description": "Feature requests, wish lists, and unlikely code miracles."
+    "name": ":sparkler: New Spark",
+    "color": "A855F7",
+    "description": "Bright, loud, possibly gone by Thursday. Feature requests live here."
   },
   {
-    "name": ":vertical_traffic_light: Red Light Green Light",
-    "color": "34A853",
-    "description": "Low risk, n00b-safe, and probably fine to merge."
+    "name": ":cherries: Low-Hanging Dopamine",
+    "color": "22C55E",
+    "description": "Small win, well-lit, real payoff. Good first issue, easy to close."
   },
   {
-    "name": ":no_entry_sign: Nope Not Happening",
-    "color": "374151",
-    "description": "Won't fix. Not now, not later, not ever."
+    "name": ":dancers: Help Wanted, Body Double",
+    "color": "EC4899",
+    "description": "Not stuck. Just need someone else in the room. Help wanted."
   },
   {
-    "name": ":woman_shrugging: Invalidated",
-    "color": "EDC531",
-    "description": "Not a bug. Misread spec, haunted cache, or user gremlin."
+    "name": ":cyclone: Had This Thought Already",
+    "color": "6366F1",
+    "description": "Twice. Possibly three times. Link it and move on."
   },
   {
-    "name": ":crystal_ball: Spirit Guide",
-    "color": "5B21B6",
-    "description": "Help from maintainers, mentors, or whoever knows this mess best."
+    "name": ":ghost: Phantom Task",
+    "color": "A8A29E",
+    "description": "Felt urgent. Wasn't real. Misread spec or haunted cache."
   },
   {
-    "name": ":robot: AutoSummon",
-    "color": "6D28D9",
-    "description": "Bot-summoned chores: releases, bumps, and other scripted nonsense."
+    "name": ":wilted_flower: Spark's Done",
+    "color": "57534E",
+    "description": "The interest left and took the scope with it. Won't fix."
+  },
+  {
+    "name": ":magic_wand: Runs Itself",
+    "color": "4C1D95",
+    "description": "Set up once so nobody has to remember. Bots only."
   }
 ]
