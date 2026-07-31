@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: gitlint-rai
+        name: RAI commit attribution
+        entry: gitlint-rai
+        args: [--msg-filename]
+        language: python
+        additional_dependencies: ['gitlint-rai']
+        stages: [commit-msg]
