@@ -12,7 +12,7 @@ on:
   push:
     branches: [main]
     paths:
-      - .github/org-labels.json
+      - .github/labels.json
       - .github/workflows/sync-labels.yml
 
 jobs:

@@ -98,8 +98,8 @@ def has_discussions(repo: str, label: str, t: str) -> bool | None:
         return None
 
 
-def list_repos(org: str, t: str):
-    repos = paged(f"/orgs/{org}/repos", t, params={"type": "all"})
+def list_repos(t: str):
+    repos = paged("/user/repos", t, params={"affiliation": "owner"})
     if repos is None:
         return []
     return [r["full_name"] for r in repos if not r.get("archived")]
@@ -186,8 +186,7 @@ def cleanup_labels(repo, target_label_names):
             print(f"Keeping label '{label}' in {repo}: in use")
 
 def main():
-    org = "ChecKMarKDevTools"
-    labels_file = ".github/org-labels.json"
+    labels_file = ".github/labels.json"
 
     t = token()
 
@@ -195,7 +194,7 @@ def main():
         target_labels = json.load(f)
 
     target_label_names = [l["name"] for l in target_labels]
-    repos = list_repos(org, t)
+    repos = list_repos(t)
 
     for repo in repos:
         print(f"Processing {repo}...")
