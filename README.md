@@ -3,6 +3,7 @@
 
 <!-- prettier-ignore-start -->
 <!--START_SECTION:rai-badge-->
+![AI attribution](https://img.shields.io/badge/AI%20attribution-80%25%20since%202025--12-C03070?style=for-the-badge)
 <!--END_SECTION:rai-badge-->
 <!-- prettier-ignore-end -->
 
